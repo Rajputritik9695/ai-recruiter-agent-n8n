@@ -1,0 +1,494 @@
+{
+  "name": "AI Recruiter Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Job Application Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Mobile Number",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Linkedin Profile"
+            },
+            {
+              "fieldLabel": "Resume(In PDF Only)",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "340d60b4-1139-4d6e-8ad5-6d4c0576e2d2",
+      "name": "Job Application Form",
+      "webhookId": "8d0c9ea2-69ee-42ad-aa2d-337c06765713"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Resume_In_PDF_Only_",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7b65f602-1e7b-4f69-88dc-d3ca2821ee26",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert AI Recruitment Assistant specializing in hiring Agentic AI Engineers.\n\nYour task is to analyze the provided resume and determine whether the candidate should be shortlisted.\n\nEvaluate the candidate based on:\n\n1. Programming Skills\n\n   * Python\n   * APIs\n   * Git/GitHub\n   * Software Development\n\n2. Agentic AI Experience\n\n   * AI Agents\n   * Multi-Agent Systems\n   * LLM Applications\n   * Prompt Engineering\n   * RAG Systems\n\n3. Frameworks & Tools\n\n   * LangChain\n   * LangGraph\n   * CrewAI\n   * AutoGen\n   * OpenAI API\n   * Gemini API\n   * Vector Databases\n\n4. Automation & Deployment\n\n   * n8n\n   * Make\n   * Zapier\n   * REST APIs\n   * Cloud Platforms\n\nScoring Rules:\n\n* Assign a score between 0 and 100.\n* Prioritize practical projects over certifications.\n* Give extra weight to Agentic AI, LLM, and automation projects.\n* Consider internships, work experience, and GitHub projects.\n* Penalize resumes with little or no AI-related experience.\n\nDecision Rules:\n\n* Score ≥ 75 → SHORTLIST\n* Score < 75 → REJECT\n\nProvide concise and objective reasoning for your decision.\n\nIMPORTANT:\n\nReturn ONLY valid JSON.\n\nDo not use markdown.\nDo not use code blocks.\nDo not add explanations before or after the JSON.\n\nThe response must exactly match the required schema.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "42946c1c-dd7b-44e1-b78d-03612b3e4647",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": null
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "e8fee6f8-d15b-4339-aecc-9499681e5a39",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZGZ8L5ptD7kRl0xN",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"type\": \"object\",\n\"properties\": {\n\"candidate_name\": {\n\"type\": \"string\"\n},\n\"email\": {\n\"type\": \"string\"\n},\n\"score\": {\n\"type\": \"number\"\n},\n\"decision\": {\n\"type\": \"string\",\n\"enum\": [\"SHORTLIST\", \"REJECT\"]\n},\n\"strengths\": {\n\"type\": \"array\",\n\"items\": {\n\"type\": \"string\"\n}\n},\n\"gaps\": {\n\"type\": \"array\",\n\"items\": {\n\"type\": \"string\"\n}\n},\n\"reason\": {\n\"type\": \"string\"\n}\n},\n\"required\": [\n\"candidate_name\",\n\"email\",\n\"score\",\n\"decision\",\n\"strengths\",\n\"gaps\",\n\"reason\"\n]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        208
+      ],
+      "id": "fe11c129-e5c6-4d99-a390-48595f2a1a14",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2767d0f7-3630-491e-b031-fce98ea5ba0e",
+              "leftValue": "={{ $json.output.properties.decision.type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        0
+      ],
+      "id": "f07d3770-6fd7-46f7-8f0c-48eac9e901e1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Job Application Form').item.json.Email }}",
+        "subject": "Update Regarding Your Application",
+        "emailType": "text",
+        "message": "=Dear {{ $('Job Application Form').item.json['Full Name'] }},\n\nThank you for your interest in the Agentic AI Engineer position and for taking the time to apply.\n\nAfter careful review of your application, we have decided not to move forward with your candidacy at this time. This decision was made after evaluating all applications against the current requirements of the role.\n\nWe sincerely appreciate your interest in our organization and encourage you to apply for future opportunities that match your skills and experience.\n\nWe wish you every success in your career and future endeavors.\n\nBest regards,\n\nHR Team\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        96
+      ],
+      "id": "de6bca67-5e92-4cce-bcae-672383a80e00",
+      "name": "Send a message1",
+      "webhookId": "debba9e7-849c-4a1e-b055-7f4cae1b59a2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "kzF4ygO16mH7D5qh",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1168,
+        -256
+      ],
+      "id": "1e2ae648-6d5d-4dca-8a5a-82221e084228",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "sendTo": "rajputritik7754@gmail.com",
+        "subject": "Candidate Shortlisted for Further Evaluation",
+        "emailType": "text",
+        "message": "=Dear HR Team,\n\nI am pleased to inform you that the candidate screening process has been completed successfully.\n\nBased on the evaluation criteria and job requirements,  {{ $('Job Application Form').item.json['Full Name'] }} has been shortlisted for the next stage of the recruitment process.\n\nCandidate Details:\n\n* Name:  {{ $('Job Application Form').item.json['Full Name'] }}\n* Position: Agentic AI Engineer\n* Email: {{ $('Job Application Form').item.json.Email }}\n* Screening Score:{{ $json.Score.type }}\n* Reason: {{ $json.Reason.type }}\n\n* Resume: Attached\n\nPlease review the candidate's profile and proceed with the next steps, such as scheduling an interview or conducting further assessments.\n\nFor additional information, feel free to reach out.\n\nBest regards,\nAI Recruitment Assistant\n",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "=Resume_In_PDF_Only_"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        -256
+      ],
+      "id": "a6fee05e-1f1b-4446-8913-b08c005e02c7",
+      "name": "Send a message",
+      "webhookId": "73e9c36c-c14c-4095-9df7-09f446bc6a36",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "kzF4ygO16mH7D5qh",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Job Application Form').item.json.Email }}",
+        "subject": "Congratulations! You Have Been Shortlisted for the Next Stage",
+        "emailType": "text",
+        "message": "=Dear {{ $('Job Application Form').item.json['Full Name'] }},  \n\nThank you for your interest in the Agentic AI Engineer position and for taking the time to submit your application.  \n\nAfter reviewing your profile, we are pleased to inform you that you have been shortlisted for the next stage of our recruitment process. Your skills and experience align well with the requirements of the role.  \n\nOur team will contact you shortly with further details regarding the next steps.  \n\nWe appreciate your interest in joining our organization and look forward to speaking with you. \n\nBest regards,  \n\nHR Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1536,
+        -240
+      ],
+      "id": "e2914ccf-53f0-4742-a7d8-231ee2b70ee2",
+      "name": "Send a message2",
+      "webhookId": "f48ed7c9-91b0-4fe1-afc6-cf37b907e792",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "kzF4ygO16mH7D5qh",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1vmimhqrkU8zbEsggvXSqkWnV-8D32UKbsagu9l5bKmg",
+          "mode": "list",
+          "cachedResultName": "Shortlisted Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vmimhqrkU8zbEsggvXSqkWnV-8D32UKbsagu9l5bKmg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Agentic Ai",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vmimhqrkU8zbEsggvXSqkWnV-8D32UKbsagu9l5bKmg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Full Name ": "={{ $('Job Application Form').item.json['Full Name'] }}",
+            "Email": "={{ $('Job Application Form').item.json.Email }}",
+            "Mobile Number": "={{ $('Job Application Form').item.json['Mobile Number'] }}",
+            "Linkedin profile ": "={{ $('Job Application Form').item.json['Linkedin Profile'] }}",
+            "Reason": "={{ $json.output.properties.reason.type }}",
+            "Score": "={{ $json.output.properties.score.type }}",
+            "Applied At": "={{ $('Job Application Form').item.json.submittedAt }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Full Name ",
+              "displayName": "Full Name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mobile Number",
+              "displayName": "Mobile Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Linkedin profile ",
+              "displayName": "Linkedin profile ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Applied At",
+              "displayName": "Applied At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "c10f4152-0ca3-43a7-b9a2-dd318d06d711",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "q8ZPjaqGfURWyBac",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Job Application Form": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b67fd836-cf8b-46ce-9a2c-82bba8b34ccf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "605be8d6497ebe810e48b3344d35cb725928bd8e8d4ae88dd9cb55d5a7170c6f"
+  },
+  "nodeGroups": [],
+  "id": "aTeXUhX53ovfUbeA",
+  "tags": []
+}
