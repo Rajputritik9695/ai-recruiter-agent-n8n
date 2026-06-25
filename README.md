@@ -128,8 +128,8 @@ The AI evaluates candidates based on:
 ### Workflow
 ![Workflow](images/workflow.png)
 
-### Candidate Evaluation
-![Candidate Evaluation](images/candidate-evaluation.png)
+### AI Screening Results
+![AI Screening Results](images/ai-screening-results.png)
 
 ### Google Sheets Output
 ![Google Sheets](images/google-sheet-output.png)
